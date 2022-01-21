@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 const mongoose = require("mongoose");
+const saucesRoutes = require("./routes/sauces");
+
 mongoose
   .connect(
     "mongodb+srv://jbc14:tByuWRrxL7Y6DCvr@cluster0.lni6s.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
@@ -23,16 +25,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  console.log("requête reçue");
-  next();
-});
-app.use((req, res, next) => {
-  res.status(201);
-  next();
-});
-app.use((req, res, next) => {
-  res.json({ message: "votre requête a été reçue" });
-});
+app.use("/api/sauces", saucesRoutes);
 
 module.exports = app;
