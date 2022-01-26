@@ -1,11 +1,12 @@
 const Sauce = require("../models/Sauce");
+const fs = require("fs");
 
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce);
 
   delete sauceObject._id;
   const sauce = new Sauce({
-    ...thingObject,
+    ...sauceObject,
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
     }`,
@@ -37,7 +38,7 @@ exports.deleteSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       const filename = sauce.imageUrl.split("/images/")[1];
-      FileSystem.unlink(`images/${filename}`, () => {
+      fs.unlink(`images/${filename}`, () => {
         Sauce.findOne({ _id: req.params.id }).then((sauce) => {
           if (!sauce) {
             res.status(404).json({
@@ -66,14 +67,23 @@ exports.deleteSauce = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
-exports.getOneSauce = (req, res, next) => {
+exports.getOneSauce = (req, res) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => res.status(200).json(sauce))
     .catch((error) => res.status(404).json({ error }));
 };
 
-exports.getAllSauces = (req, res, next) => {
+exports.getAllSauces = (req, res) => {
   Sauce.find()
     .then((sauces) => res.status(200).json(sauces))
     .catch((error) => res.status(400).json({ error }));
 };
+
+exports.like = (req, res)=>{
+  
+}
+
+
+//Supprimer image lors des modifs si
+//likes
+//ignore le rep images
