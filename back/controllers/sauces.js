@@ -5,8 +5,13 @@ exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce);
 
   delete sauceObject._id;
+
   const sauce = new Sauce({
     ...sauceObject,
+    likes: 0,
+    dislikes: 0,
+    usersLiked: [],
+    usersDisliked: [],
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
     }`,
@@ -79,10 +84,71 @@ exports.getAllSauces = (req, res) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
-exports.like = (req, res)=>{
-  
-}
-
+exports.like = (req, res) => {
+  Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+      if (
+        (sauce.usersLiked.includes(`${req.auth.userId}`) ||
+          sauce.usersLiked.includes(`${req.auth.userId}`)) &&
+        (req.body.like === 1 || req.body.like === -1)
+      ) {
+        res.status(400).json({ error });
+      } else if (
+        sauce.usersLiked.includes(`${req.auth.userId}`) &&
+        req.body.like === 0
+      ) {
+        const idToDelete = sauce.usersLiked.indexOf(`${req.auth.userId}`);
+        sauce.usersLiked.splice(idToDelete, 1);
+        sauce.likes -= 1;
+      } else if (
+        sauce.usersDisliked.includes(`${req.auth.userId}`) &&
+        req.body.like === 0
+      ) {
+        const idToDelete = sauce.usersDisliked.indexOf(`${req.auth.userId}`);
+        sauce.usersDisliked.splice(idToDelete, 1);
+        sauce.dislikes -= 1;
+      } else if (
+        (!sauce.usersLiked.includes(`${req.auth.userId}`) ||
+          !sauce.usersDisliked.includes(`${req.auth.userId}`)) &&
+        req.body.like === 0
+      ) {
+        res.status(400).json({ error });
+      } else if (
+        !sauce.usersLiked.includes(`${req.auth.userId}`) &&
+        req.body.like === 1
+      ) {
+        sauce.usersLiked.push(`${req.auth.userId}`);
+        sauce.likes += 1;
+      } else if (
+        !sauce.usersDisliked.includes(`${req.auth.userId}`) &&
+        req.body.like === -1
+      ) {
+        sauce.usersDisliked.push(`${req.auth.userId}`);
+        sauce.dislikes += 1;
+      } else {
+        console.log("error");
+      }
+      Sauce.updateOne(
+        { _id: req.params.id },
+        {
+          $set: {
+            likes: sauce.likes,
+            dislikes: sauce.dislikes,
+            usersLiked: sauce.usersLiked,
+            usersDisliked: sauce.usersDisliked,
+          },
+        }
+      )
+        .then(() => res.status(200).json({ message: "Objet modifié !" }))
+        .catch((error) => res.status(400).json({ error }));
+    })
+    .then(() => {
+      res.status(200).json({ message: "like succeeded" });
+    })
+    .catch((error) => {
+      res.status(400).json({ error: error });
+    });
+};
 
 //Supprimer image lors des modifs si
 //likes
