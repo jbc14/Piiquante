@@ -23,6 +23,15 @@ exports.createSauce = (req, res, next) => {
 };
 
 exports.updateSauce = (req, res, next) => {
+  if (req.file) {
+    Sauce.findOne({ _id: req.params.id }).then((sauce) => {
+      const filename = sauce.imageUrl.split("/images/")[1];
+      fs.unlink(`images/${filename}`, (err) => {
+        if (err) throw err;
+        console.log("Image was deleted");
+      });
+    });
+  }
   const sauceObject = req.file
     ? {
         ...JSON.parse(req.body.sauce),
@@ -31,6 +40,7 @@ exports.updateSauce = (req, res, next) => {
         }`,
       }
     : { ...req.body };
+
   Sauce.updateOne(
     { _id: req.params.id },
     { ...sauceObject, _id: req.params.id }
@@ -150,6 +160,6 @@ exports.like = (req, res) => {
     });
 };
 
-//Supprimer image lors des modifs si
-//likes
-//ignore le rep images
+//Supprimer image lors des modifs si OK
+//likes ok
+//ignore le rep images ok
